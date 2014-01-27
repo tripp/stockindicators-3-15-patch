@@ -7,37 +7,87 @@ var defaultAxisLabelFormat = {
 Y.CategoryAxisBase.ATTRS.labelFormat = defaultAxisLabelFormat;
 Y.CategoryAxis.ATTRS.labelFormat = defaultAxisLabelFormat;
 
-//patch CartesianSeries destructor bug
-Y.CartesianSeries.prototype.destructor = function() {
-    if(this.get("rendered"))
-    {
-        if(this._xDataReadyHandle)
+if(Y.SeriesBase) {
+    Y.SeriesBase.prototype.destructor = function() {
+        var marker,
+            markers = this.get("markers");
+        if(this.get("rendered"))
         {
-            this._xDataReadyHandle.detach();
+            if(this._stylesChangeHandle)
+            {
+                this._stylesChangeHandle.detach();
+            }
+            if(this._widthChangeHandle)
+            {
+                this._widthChangeHandle.detach();
+            }
+            if(this._heightChangeHandle)
+            {
+                this._heightChangeHandle.detach();
+            }
+            if(this._visibleChangeHandle)
+            {
+                this._visibleChangeHandle.detach();
+            }
         }
-        if(this._xDataUpdateHandle)
+        while(markers && markers.length > 0)
         {
-            this._xDataUpdateHandle.detach();
+            marker = markers.shift();
+            if(marker && marker instanceof Y.Shape)
+            {
+                marker.destroy();
+            }
         }
-        if(this._yDataReadyHandle)
+        if(this._path)
         {
-            this._yDataReadyHandle.detach();
+            this._path.destroy();
+            this._path = null;
         }
-        if(this._yDataUpdateHandle)
+        if(this._lineGraphic)
         {
-            this._yDataUpdateHandle.detach();
+            this._lineGraphic.destroy();
+            this._lineGraphic = null;
         }
-        if(this._xAxisChangeHandle)
+        if(this._groupMarker)
         {
-            this._xAxisChangeHandle.detach();
+            this._groupMarker.destroy();
+            this._groupMarker = null;
         }
-        if(this._yAxisChangeHandle)
-        {
-            this._yAxisChangeHandle.detach();
-        }
-    }
-};
+    };
+}
 
+//patch CartesianSeries destructor bug
+if(Y.CartesianSeries) {
+    Y.CartesianSeries.prototype.destructor = function() {
+        if(this.get("rendered"))
+        {
+            if(this._xDataReadyHandle)
+            {
+                this._xDataReadyHandle.detach();
+            }
+            if(this._xDataUpdateHandle)
+            {
+                this._xDataUpdateHandle.detach();
+            }
+            if(this._yDataReadyHandle)
+            {
+                this._yDataReadyHandle.detach();
+            }
+            if(this._yDataUpdateHandle)
+            {
+                this._yDataUpdateHandle.detach();
+            }
+            if(this._xAxisChangeHandle)
+            {
+                this._xAxisChangeHandle.detach();
+            }
+            if(this._yAxisChangeHandle)
+            {
+                this._yAxisChangeHandle.detach();
+            }
+        }
+    };
+}
 if(Y.SVGDrawing) {
     Y.SVGDrawing.prototype_closePath = function()
     {
@@ -393,7 +443,7 @@ if(Y.SVGDrawing) {
 		this._strokeChangeHandler();
 		this._updateTransform();
 	};
-    
+
     Y.SVGShape.prototype._clearFlags = function() {
         var key;
         for(key in this._nodeAttrFlags) {
